@@ -15,12 +15,13 @@ class GameTest < ActiveSupport::TestCase
     assert game.status = Game::PENDING
   end
 
-  test "Game not created when not having an owner and opponent" do
-    begin
-      Game.create
-    rescue ActiveRecord::ActiveRecordError => e
-    end
-
-    assert e
+  test "Game invalid when not having an owner and opponent" do
+    user = users(:one)
+    game_a = Game.new
+    game_b = Game.new(owner: user)
+    game_c = Game.new(opponent: user)
+    assert_not game_a.save
+    assert_not game_b.save
+    assert_not game_c.save
   end
 end

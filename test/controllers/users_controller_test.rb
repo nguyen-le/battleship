@@ -7,7 +7,7 @@ class Api::UsersControllerTest < ActionController::TestCase
   end
 
   test "create with existing user" do
-    post :create, {user: {user_name: 'Al'}}
+    post :create, {user: {user_name: 'Alton'}}
     assert_response :unprocessable_entity
   end
 end
