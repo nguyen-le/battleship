@@ -28,7 +28,8 @@ class Game < ActiveRecord::Base
     :opponent,
     class_name: 'User',
     foreign_key: 'opponent_id',
-    inverse_of: :games
+    inverse_of: :games,
+    dependent: :destroy
   )
 
   private
