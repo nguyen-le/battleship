@@ -15,6 +15,16 @@ class Api::GamesController < ApplicationController
     end
   end
 
+  def show
+    #@game = Game.find_by_id()
+    @user = User.find_by_user_name(params["user_name"])
+    if @user
+      render json: @user
+    else
+      render json: {user: nil}
+    end
+  end
+
   private
   def _game_params
     params.require(:game).permit(:owner_id, :opponent_id)
