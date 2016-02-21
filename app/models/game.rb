@@ -24,15 +24,19 @@ class Game < ActiveRecord::Base
     inverse_of: :games
   )
 
+  def randomize_starting_player
+    @current_attacker_id = [@owner_id, @opponent_id].sample
+  end
+
   private
   def _has_opponent
-    if opponent.nil? && opponent_id.nil?
+    if opponent.nil? && User.find_by_id(opponent_id).nil?
       errors.add(:opponent, "can't be blank")
     end
   end
 
   def _has_owner
-    if owner.nil? && owner_id.nil?
+    if owner.nil? && User.find_by_id(owner_id).nil?
       errors.add(:owner, "can't be blank")
     end
   end

@@ -55,7 +55,7 @@ class Api::UsersControllerTest < ActionController::TestCase
 
   test "show with non-existent user id" do
     resp = get :show, id: 0
-    error_msg = JSON.parse(resp.body).fetch('error')
+    error_msg = JSON.parse(resp.body).fetch('errors')
 
     assert_response :not_found
     assert error_msg

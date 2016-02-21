@@ -1,4 +1,7 @@
 class Api::GamesController < ApplicationController
+  before_action :_find_game, only: [:show, :update, :accept]
+  before_action :_check_ownership, only: [:update]
+
   def index
     offset = params[:offset] || 0
     limit = params[:limit] || 100
@@ -13,30 +16,58 @@ class Api::GamesController < ApplicationController
   end
 
   def create
-    @game = Game.new(_game_params)
+    @game = Game.new(_create_params)
+    @game.owner_id = session[:user_id]
 
     if @game.save
       render json: @game, status: :created
     else
-      render json: {error: @game.errors.full_messages}, status: :unprocessable_entity
+      render json: {errors: @game.errors.full_messages}, status: :unprocessable_entity
     end
   end
 
   def show
-    begin
-      @game = Game.find(params[:id])
-    rescue ActiveRecord::RecordNotFound => e
+    render json: @game
+  end
+
+  def accept
+    if _update_params.has_key?('status') && @game.opponent_id != session[:user_id]
+      @errors << 'Opponent must accept game'
+      return render json: {errors: @errors}, status: :unprocessable_entity
     end
 
-    if @game
+    @game.randomize_starting_player
+    begin
+      @game.update!(_update_params)
+    rescue ActiveRecord::ActiveRecordError => e
+      @errors << e.message
+    end
+
+    if @errors.empty?
       render json: @game
     else
-      render json: {error: e.message}, status: :not_found
+      render json: {errors: @errors}, status: :unprocessable_entity
     end
   end
 
   private
-  def _game_params
-    params.require(:game).permit(:owner_id, :opponent_id)
+  def _params(*attrs)
+    params.require(:game).permit(*attrs)
+  end
+
+  def _create_params
+    _params(:opponent_id)
+  end
+
+  def _update_params
+    _params(:status)
+  end
+
+  def _find_game
+    begin
+      @game = Game.find(params[:id])
+    rescue ActiveRecord::RecordNotFound => e
+      return render json: {errors: e.message}, status: :not_found
+    end
   end
 end

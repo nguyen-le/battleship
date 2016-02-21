@@ -15,7 +15,7 @@ class Api::UsersController < ApplicationController
     if @user.save
       render json: @user, status: :created, format: 'json'
     else
-      render json: {error: @user.errors.full_messages}, status: :unprocessable_entity
+      render json: {errors: @user.errors.full_messages}, status: :unprocessable_entity
     end
   end
 
@@ -23,13 +23,10 @@ class Api::UsersController < ApplicationController
     begin
       @user = User.find(params[:id])
     rescue ActiveRecord::RecordNotFound => e
+      return render json: {errors: e.message}, status: :not_found
     end
 
-    if @user
-      render json: @user
-    else
-      render json: {error: e.message}, status: :not_found
-    end
+    render json: @user
   end
 
   private
