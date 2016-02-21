@@ -5,11 +5,11 @@ class CreatePlayerStates < ActiveRecord::Migration
       t.jsonb      :grid, null: false
 
       t.references :game, null: false
-      t.references :player, null: false
+      t.references :user, null: false, index: true
 
       t.timestamps null: false
     end
     add_index :player_states, :grid, using: :gin
-    add_index :player_states, [:game_id, :player_id], unique: true
+    add_index :player_states, [:game_id, :user_id], unique: true
   end
 end

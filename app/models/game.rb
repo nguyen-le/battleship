@@ -6,6 +6,11 @@ class Game < ActiveRecord::Base
   STANDARD = 'standard'
   LARGE = 'large'
 
+  # health
+  SMALL_HP = 6
+  STANDARD_HP = 17
+  LARGE_HP = 34
+
   # status
   PENDING = 'pending'
   SETUP = 'setup'
@@ -31,6 +36,25 @@ class Game < ActiveRecord::Base
     inverse_of: :games,
     dependent: :destroy
   )
+  has_many :player_states
+
+  def self.create_grid(size)
+    n =
+      case size
+      when Game::SMALL
+        6
+      when Game::STANDARD
+        10
+      when Game::LARGE
+        20
+      end
+    grid = {}
+    ('a'..'z').to_a.each_with_index do |letter, idx|
+      break if idx == n
+      grid[letter] = Array.new(n) { 0 }
+    end
+    return grid
+  end
 
   private
   def _has_opponent

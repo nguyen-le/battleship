@@ -5,11 +5,11 @@ class CreateShips < ActiveRecord::Migration
       t.jsonb      :location, null: false
 
       t.references :game, null: false
-      t.references :player, null: false
+      t.references :user, null: false, index: true
 
       t.timestamps null: false
     end
     add_index :ships, :location, using: :gin
-    add_index :ships, [:game_id, :player_id]
+    add_index :ships, [:game_id, :user_id]
   end
 end

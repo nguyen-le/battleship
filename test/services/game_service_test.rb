@@ -17,6 +17,9 @@ class GameServiceTest < ActionController::TestCase
     game_service.do_setup_phase
 
     assert @game.status == Game::SETUP
+    @game.player_states.each do |state|
+      assert state.health == Game::STANDARD_HP
+    end
   end
 
   test 'randomize starting player' do

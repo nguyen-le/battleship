@@ -1,6 +1,13 @@
 require 'test_helper'
 
 class GameTest < ActiveSupport::TestCase
+  test 'static - create grid' do
+    grid = Game.create_grid(Game::STANDARD)
+    grid_large = Game.create_grid(Game::LARGE)
+    assert grid.length == 10
+    assert grid_large.length == 20
+  end
+
   test 'state - new game has status pending' do
     owner = users(:one)
     opponent = users(:two)
