@@ -31,10 +31,6 @@ class Game < ActiveRecord::Base
     inverse_of: :games
   )
 
-  def randomize_starting_player
-    @current_attacker_id = [@owner_id, @opponent_id].sample
-  end
-
   private
   def _has_opponent
     if opponent.nil? && User.find_by_id(opponent_id).nil?

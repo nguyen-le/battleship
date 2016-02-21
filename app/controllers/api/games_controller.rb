@@ -40,9 +40,12 @@ class Api::GamesController < ApplicationController
       return render json: {errors: @errors}, status: :unprocessable_entity
     end
 
-    @game.randomize_starting_player
+    game_service = GameService.new(@game)
     begin
-      @game.update!(_update_params)
+      #game_service.randomize_starting_player
+      #game_service.update_status(_update_params.fetch('status'))
+      game_service.do_setup_phase
+      @game.save!
     rescue ActiveRecord::ActiveRecordError => e
       @errors << e.message
     end
