@@ -1,27 +1,37 @@
 class Api::GamesController < ApplicationController
+  def index
+    offset = params[:offset] || 0
+    limit = params[:limit] || 100
+
+    @games =
+      Game.select(:id, :status, :owner_id, :opponent_id, :winning_player_id)
+        .limit(limit).offset(offset)
+    @games = @games.where('owner_id = ?', params[:owner_id]) if params[:owner_id]
+    @games = @games.where('opponent_id = ?', params[:opponent_id]) if params[:opponent_id]
+
+    render json: {games: @games.to_a}
+  end
+
   def create
     @game = Game.new(_game_params)
 
-    begin
-      success = @game.save!
-    rescue ActiveRecord::ActiveRecordError => e
-      error_msg = e.message
-    end
-
-    if success
-      render json: GameSerializer.new(@game), status: :created
+    if @game.save
+      render json: @game, status: :created
     else
-      render json: {error: error_msg}, status: :unprocessable_entity
+      render json: {error: @game.errors.full_messages}, status: :unprocessable_entity
     end
   end
 
   def show
-    #@game = Game.find_by_id()
-    @user = User.find_by_user_name(params["user_name"])
-    if @user
-      render json: @user
+    begin
+      @game = Game.find(params[:id])
+    rescue ActiveRecord::RecordNotFound => e
+    end
+
+    if @game
+      render json: @game
     else
-      render json: {user: nil}
+      render json: {error: e.message}, status: :not_found
     end
   end
 
