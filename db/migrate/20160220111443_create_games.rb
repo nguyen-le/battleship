@@ -1,7 +1,8 @@
 class CreateGames < ActiveRecord::Migration
   def change
     create_table :games do |t|
-      t.string :status, default: 'PENDING', index: true
+      t.string :status, default: 'pending', null: false, index: true
+      t.string :game_type, default: 'standard', null: false
 
       t.references :owner, null: false, index: true
       t.references :opponent, null: false, index: true

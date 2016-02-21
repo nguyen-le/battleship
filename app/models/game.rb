@@ -1,13 +1,20 @@
 class Game < ActiveRecord::Base
   include ActiveModel::Validations
 
-  PENDING = 'PENDING'
-  SETUP = 'SETUP'
-  IN_PROGRESS = 'IN_PROGRESS'
-  FINISHED = 'FINISHED'
+  # game type
+  SMALL = 'small'
+  STANDARD = 'standard'
+  LARGE = 'large'
+
+  # status
+  PENDING = 'pending'
+  SETUP = 'setup'
+  IN_PROGRESS = 'in progress'
+  FINISHED = 'finished'
 
   validate :_has_owner
   validate :_has_opponent
+  validates :game_type, inclusion: {in: [SMALL, STANDARD, LARGE]}
   validates :status, inclusion: {in: [PENDING, SETUP, IN_PROGRESS, FINISHED]}
 
   belongs_to(

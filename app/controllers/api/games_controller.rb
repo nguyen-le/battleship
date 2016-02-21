@@ -17,7 +17,7 @@ class Api::GamesController < ApplicationController
 
   def create
     @game = Game.new(_create_params)
-    @game.owner_id = session[:user_id]
+    @game.owner_id = current_user_id
 
     if @game.save
       render json: @game, status: :created
@@ -31,7 +31,11 @@ class Api::GamesController < ApplicationController
   end
 
   def accept
-    if _update_params.has_key?('status') && @game.opponent_id != session[:user_id]
+    if @game.status != Game::PENDING ||
+       @game.opponent_id != current_user_id ||
+       (_update_params.has_key?('status') &&
+         _update_params.fetch('status') != Game::SETUP)
+
       @errors << 'Opponent must accept game'
       return render json: {errors: @errors}, status: :unprocessable_entity
     end
