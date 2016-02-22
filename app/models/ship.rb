@@ -8,7 +8,7 @@ class Ship < ActiveRecord::Base
 
   validates :ship_type,
     inclusion: { in: [DESTROYER, CRUISER, SUBMARINE, BATTLESHIP, CARRIER] },
-    uniqueness: { scope: [:game_id, :user_id, :ship_type] }
+    uniqueness: { scope: [:game_id, :user_id] }
   validates_presence_of :user
   validates_presence_of :game
 

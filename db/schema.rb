@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160221184103) do
+ActiveRecord::Schema.define(version: 20160222091741) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -59,6 +59,17 @@ ActiveRecord::Schema.define(version: 20160221184103) do
   add_index "ships", ["game_id", "user_id", "ship_type"], name: "index_ships_on_game_id_and_user_id_and_ship_type", unique: true, using: :btree
   add_index "ships", ["location"], name: "index_ships_on_location", using: :gin
   add_index "ships", ["user_id"], name: "index_ships_on_user_id", using: :btree
+
+  create_table "shots", force: :cascade do |t|
+    t.string   "location",            null: false
+    t.integer  "game_id",             null: false
+    t.integer  "user_id",             null: false
+    t.integer  "receiving_player_id", null: false
+    t.datetime "created_at",          null: false
+    t.datetime "updated_at",          null: false
+  end
+
+  add_index "shots", ["game_id", "user_id", "location"], name: "index_shots_on_game_id_and_user_id_and_location", unique: true, using: :btree
 
   create_table "users", force: :cascade do |t|
     t.string   "user_name",  null: false

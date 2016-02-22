@@ -33,6 +33,14 @@ class GameService
     @game.ships.build(user: user, ship_type: ship_type, location: location_map)
   end
 
+  def build_shot(user, location)
+    receiving_player = @game.owner_id == user.id ? @game.opponent : @game.owner
+
+    raise 'Invalid shot location' unless @game_policy.location_within_bounds?(location)
+
+    @game.shots.build(user: user, receiving_player: receiving_player, location: location)
+  end
+
   def enter_setup_phase
     update_status(Game::SETUP)
     randomize_starting_player
@@ -53,21 +61,9 @@ class GameService
   end
 
   private
-  def _get_game_boundaries
-    a_z = ('a'..'z').to_a
-    case @game.game_type
-    when Game::SMALL
-      {alphabet: a_z[0..6], number: 6}
-    when Game::STANDARD
-      {alphabet: a_z[0..10], number: 10}
-    when Game::LARGE
-      {alphabet: a_z[0..20], number: 20}
-    end
-  end
-
   def _parse_location_arr_to_map(location_arr)
     location_map = {}
-    boundaries = _get_game_boundaries
+    boundaries = @game_policy.game_boundaries
 
     starting_column = nil
     starting_row = nil
@@ -76,17 +72,17 @@ class GameService
     same_row = true
 
     location_arr.each do |square|
-      row_letter = square.downcase.match(/[a-z]+/).to_s
+      row_letter, letter_within_bounds = @game_policy.letter_col_within_bounds(square)
       starting_column ||= row_letter
       same_column = false if starting_column != row_letter
 
-      row_num = square.match(/\d+/).to_s.to_i
+      row_num, num_within_bounds = @game_policy.num_row_within_bounds(square)
       starting_row ||= row_num
       same_row = false if starting_row != row_letter
 
       if !(row_letter.length == 1 &&
-          boundaries[:alphabet].include?(row_letter) &&
-          row_num.between?(1, boundaries[:number]) &&
+          letter_within_bounds &&
+          num_within_bounds &&
           (same_column || same_row))
         raise 'Invalid ship location'
       end

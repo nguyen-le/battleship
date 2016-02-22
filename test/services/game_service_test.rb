@@ -7,6 +7,16 @@ class GameServiceTest < ActionController::TestCase
     @game = Game.create(owner: @owner, opponent: @opp)
   end
 
+  test 'build player states' do
+    game_service = GameService.factory(@game)
+    game_service.build_player_state(@owner)
+    game_service.build_player_state(@opp)
+
+    @game.player_states.each do |state|
+      assert state.health == Game::STANDARD_HP
+    end
+  end
+
   test 'build ship' do
     @game.status = Game::SETUP
     game_service = GameService.factory(@game)
@@ -17,16 +27,13 @@ class GameServiceTest < ActionController::TestCase
     assert ship.ship_type = Ship::CRUISER
     assert ship.location = {'a1' => 1, 'a2' => 1, 'a3' => 1}
     assert ship.health == 3
- end
+  end
 
-  test 'build player states' do
+  test 'build shot' do
     game_service = GameService.factory(@game)
-    game_service.build_player_state(@owner)
-    game_service.build_player_state(@opp)
+    shot = game_service.build_shot(@owner, 'a1')
 
-    @game.player_states.each do |state|
-      assert state.health == Game::STANDARD_HP
-    end
+    assert shot.save
   end
 
   test 'enter setup phase' do
