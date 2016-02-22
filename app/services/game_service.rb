@@ -28,7 +28,7 @@ class GameService
     raise 'Cant create anymore Ships' unless @game_policy.can_create_more_ships?(user)
     raise 'Invalid ship size' unless Ship.get_size(ship_type) == location_arr.length
 
-    location_map = _parse_location_arr_to_map(location_arr)
+    location_map = parse_location_arr_to_map(location_arr)
 
     @game.ships.build(user: user, ship_type: ship_type, location: location_map)
   end
@@ -44,6 +44,22 @@ class GameService
     else
       raise 'Duplicate shot'
     end
+  end
+
+  def enter_setup_phase
+    update_status(Game::SETUP)
+    randomize_starting_player
+    build_player_state(@game.owner)
+    build_player_state(@game.opponent)
+  end
+
+  def enter_firing_phase
+    @game.status = Game::IN_PROGRESS if @game_policy.can_start_game?
+  end
+
+  def enter_game_finished_phase(winning_player)
+    @game.winning_player_id = winning_player.id
+    @game.status = Game::FINISHED
   end
 
   def process_player_dmg(shot)
@@ -67,13 +83,14 @@ class GameService
       end
     end
     column[shot.location.match(/\d+/).to_s.to_i] = new_value_for_grid
+    @game.current_attacker_id = user.id
 
     ActiveRecord::Base.transaction do
-      @game.save
-      ship.save
-      shot.save
-      user.save
-      player_state.save
+      @game.save!
+      ship.save! if ship
+      shot.save!
+      user.save!
+      player_state.save!
     end
     return user
   end
@@ -87,26 +104,10 @@ class GameService
     @game.winning_player_id = winning_player.id
     @game.status = Game::FINISHED
 
-    @game.transaction do
+    ActiveRecord::Base.transaction do
       player_state.save!
       @game.save!
     end
-  end
-
-  def enter_setup_phase
-    update_status(Game::SETUP)
-    randomize_starting_player
-    build_player_state(@game.owner)
-    build_player_state(@game.opponent)
-  end
-
-  def enter_firing_phase
-    @game.status = Game::IN_PROGRESS if @game_policy.can_start_game?
-  end
-
-  def enter_game_finished_phase(winning_player)
-    @game.winning_player_id = winning_player.id
-    @game.status = Game::FINISHED
   end
 
   def randomize_starting_player
@@ -118,7 +119,7 @@ class GameService
   end
 
   private
-  def _parse_location_arr_to_map(location_arr)
+  def parse_location_arr_to_map(location_arr)
     location_map = {}
 
     starting_column = nil

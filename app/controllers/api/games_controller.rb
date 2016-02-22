@@ -19,10 +19,15 @@ class Api::GamesController < ApplicationController
     @game = Game.new(_create_params)
     @game.owner_id = current_user_id
 
-    if @game.save
+    begin
+      @game.save!
+    rescue ActiveRecord::ActiveRecordError => e
+      @errors << e.message
+    end
+    if @errors.empty?
       render json: @game, status: :created
     else
-      render json: {errors: @game.errors.full_messages}, status: :unprocessable_entity
+      render json: {errors: @errors}, status: :unprocessable_entity
     end
   end
 
@@ -106,8 +111,3 @@ class Api::GamesController < ApplicationController
     end
   end
 end
-
-# ~> NameError
-# ~> uninitialized constant Api
-# ~>
-# ~> /var/folders/ct/yhbzpv_s01q2nn4sxtsc47780000gn/T/seeing_is_believing_temp_dir20160221-53654-o7gbjj/program.rb:1:in `<main>'

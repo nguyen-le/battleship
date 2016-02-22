@@ -52,7 +52,7 @@ class Api::GamesControllerTest < ActionController::TestCase
 
   # Accept
   test "accept - opponent can accept game challenge" do
-    resp = put :accept, {id: @game.id}, {user_id: @opp.id}
+    resp = post :accept, {id: @game.id}, {user_id: @opp.id}
     game = JSON.parse(resp.body).fetch('game')
 
     assert_response :ok
@@ -60,7 +60,7 @@ class Api::GamesControllerTest < ActionController::TestCase
   end
 
   test "accept - bad - only opponent can accept game challenge" do
-    resp = put :accept, {id: @game.id}, {user_id: @owner.id}
+    resp = post :accept, {id: @game.id}, {user_id: @owner.id}
     error_msg = JSON.parse(resp.body).fetch('errors')
 
     assert_response :unprocessable_entity
@@ -69,11 +69,28 @@ class Api::GamesControllerTest < ActionController::TestCase
 
 
   # Start
-  test "start - game starts" do
-    post :start, {id: @game.id}, {user_id: @owner.id}
+  test "start - game cant start until ships created" do
+    resp = post :start, {id: @game.id}, {user_id: @owner.id}
+    game = JSON.parse(resp.body).fetch('game')
+    assert game.fetch('status') != Game::IN_PROGRESS
   end
 
-  test "start - bad - game doesnt start unless conditions met" do
-
+  test "start - game can start" do
+    game_service = GameService.factory(@game)
+    game_service.enter_setup_phase
+    game_service.build_ship(@owner, Ship::DESTROYER, ['a1', 'a2'])
+    game_service.build_ship(@owner, Ship::CRUISER, ['b1', 'b2', 'b3'])
+    game_service.build_ship(@owner, Ship::SUBMARINE, ['c1', 'c2', 'c3'])
+    game_service.build_ship(@owner, Ship::BATTLESHIP, ['d1', 'd2', 'd3', 'd4'])
+    game_service.build_ship(@owner, Ship::CARRIER, ['e1', 'e2', 'e3', 'e4', 'e5'])
+    game_service.build_ship(@opp, Ship::DESTROYER, ['a1', 'a2'])
+    game_service.build_ship(@opp, Ship::CRUISER, ['b1', 'b2', 'b3'])
+    game_service.build_ship(@opp, Ship::SUBMARINE, ['c1', 'c2', 'c3'])
+    game_service.build_ship(@opp, Ship::BATTLESHIP, ['d1', 'd2', 'd3', 'd4'])
+    game_service.build_ship(@opp, Ship::CARRIER, ['e1', 'e2', 'e3', 'e4', 'e5'])
+    @game.save
+    resp = post :start, {id: @game.id}, {user_id: @owner.id}
+    game = JSON.parse(resp.body).fetch('game')
+    assert game.fetch('status') == Game::IN_PROGRESS
   end
 end
