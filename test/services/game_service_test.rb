@@ -14,9 +14,14 @@ class GameServiceTest < ActionController::TestCase
 
   test 'build ship' do
     game_service = GameService.new(@game)
-    ship = game_service.build_ship(@owner, Ship::CRUISER)
+    ship = game_service.build_ship(@owner, Ship::CRUISER, ['a1', 'a2', 'a3'])
+    ship.save
 
-  end
+    assert ship.user = @owner
+    assert ship.ship_type = Ship::CRUISER
+    assert ship.location = {'a1' => 1, 'a2' => 1, 'a3' => 1}
+    assert ship.health == 3
+ end
 
   test 'build player states' do
     game_service = GameService.new(@game)

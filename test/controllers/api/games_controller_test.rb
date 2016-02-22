@@ -51,23 +51,15 @@ class Api::GamesControllerTest < ActionController::TestCase
 
   # Accept
   test "accept - opponent can accept game challenge" do
-    resp = put :accept, {id: @game.id, game: {status: 'setup'}}, {user_id: @opp.id}
+    resp = put :accept, {id: @game.id}, {user_id: @opp.id}
     game = JSON.parse(resp.body).fetch('game')
 
     assert_response :ok
     assert game['status'] == 'setup'
   end
 
-  test "accept - bad - opponent cant accept game challenge with bad status" do
-    resp = put :accept, {id: @game.id, game: {status: 'finished'}}, {user_id: @opp.id}
-    error_msg = JSON.parse(resp.body).fetch('errors')
-
-    assert_response :unprocessable_entity
-    assert error_msg
-  end
-
   test "accept - bad - only opponent can accept game challenge" do
-    resp = put :accept, {id: @game.id, game: {status: 'setup'}}, {user_id: @owner.id}
+    resp = put :accept, {id: @game.id}, {user_id: @owner.id}
     error_msg = JSON.parse(resp.body).fetch('errors')
 
     assert_response :unprocessable_entity

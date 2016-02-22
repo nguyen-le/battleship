@@ -10,10 +10,10 @@ class Api::UsersController < ApplicationController
   end
 
   def create
-    @user = User.new(_user_params)
+    @user = User.new(_create_params)
 
     if @user.save
-      render json: @user, status: :created, format: 'json'
+      render json: @user, status: :created
     else
       render json: {errors: @user.errors.full_messages}, status: :unprocessable_entity
     end
@@ -30,7 +30,12 @@ class Api::UsersController < ApplicationController
   end
 
   private
-  def _user_params
-    params.require(:user).permit(:user_name)
+  def _params(*attrs)
+    params.require(:user).permit(attrs)
   end
+
+  def _create_params
+    _params(:user_name)
+  end
+
 end

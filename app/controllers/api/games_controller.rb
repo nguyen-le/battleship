@@ -31,21 +31,17 @@ class Api::GamesController < ApplicationController
   end
 
   def accept
-    if @game.status != Game::PENDING ||
-       @game.opponent_id != current_user_id ||
-       (_update_params.has_key?('status') &&
-         _update_params.fetch('status') != Game::SETUP)
-
+    #GamePolicy
+    if @game.status != Game::PENDING || @game.opponent_id != current_user_id
       @errors << 'Opponent must accept game'
-      return render json: {errors: @errors}, status: :unprocessable_entity
-    end
-
-    game_service = GameService.new(@game)
-    begin
-      game_service.do_setup_phase
-      @game.save!
-    rescue ActiveRecord::ActiveRecordError => e
-      @errors << e.message
+    else
+      game_service = GameService.new(@game)
+      begin
+        game_service.do_setup_phase
+        @game.save!
+      rescue ActiveRecord::ActiveRecordError => e
+        @errors << e.message
+      end
     end
 
     if @errors.empty?
@@ -57,7 +53,7 @@ class Api::GamesController < ApplicationController
 
   private
   def _params(*attrs)
-    params.require(:game).permit(*attrs)
+    params.require(:game).permit(attrs)
   end
 
   def _create_params

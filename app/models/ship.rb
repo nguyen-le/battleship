@@ -17,6 +17,21 @@ class Ship < ActiveRecord::Base
 
   before_save :calc_health
 
+  def self.get_size(ship_type)
+    case ship_type
+    when Ship::DESTROYER
+      2
+    when Ship::CRUISER
+      3
+    when Ship::SUBMARINE
+      3
+    when Ship::BATTLESHIP
+      4
+    when Ship::CARRIER
+      5
+    end
+  end
+
   def calc_health
     self.health = self.location.inject(0) { |sum, (square, hp)| sum + hp }
   end
