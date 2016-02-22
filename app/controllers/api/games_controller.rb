@@ -55,10 +55,23 @@ class Api::GamesController < ApplicationController
     game_service.enter_firing_phase
     begin
       @game.save!
-    rescue Exception => e
+    rescue ActiveRecord::ActiveRecordError => e
       @errors << e.message
     end
 
+    if @errors.empty?
+      render json: @game
+    else
+      render json: {errors: @errors}, status: :unprocessable_entity
+    end
+  end
+
+  def surrender
+    begin
+      game_service.process_surrender(current_user)
+    rescue RuntimeError, ActiveRecord::ActiveRecordError => e
+      @errors << e.message
+    end
     if @errors.empty?
       render json: @game
     else

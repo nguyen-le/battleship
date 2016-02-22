@@ -34,7 +34,26 @@ class GameServiceTest < ActionController::TestCase
     assert player_state.health  == 16
     assert ship.location.fetch('a1') == 0
     assert ship.location.fetch('a2') == 1
+  end
 
+  test 'process surrender' do
+    game_service = GameService.factory(@game)
+    game_service.enter_setup_phase
+    game_service.build_ship(@owner, Ship::DESTROYER, ['a1', 'a2'])
+    game_service.build_ship(@owner, Ship::CRUISER, ['b1', 'b2', 'b3'])
+    game_service.build_ship(@owner, Ship::SUBMARINE, ['c1', 'c2', 'c3'])
+    game_service.build_ship(@owner, Ship::BATTLESHIP, ['d1', 'd2', 'd3', 'd4'])
+    game_service.build_ship(@owner, Ship::CARRIER, ['e1', 'e2', 'e3', 'e4', 'e5'])
+    game_service.build_ship(@opp, Ship::DESTROYER, ['a1', 'a2'])
+    game_service.build_ship(@opp, Ship::CRUISER, ['b1', 'b2', 'b3'])
+    game_service.build_ship(@opp, Ship::SUBMARINE, ['c1', 'c2', 'c3'])
+    game_service.build_ship(@opp, Ship::BATTLESHIP, ['d1', 'd2', 'd3', 'd4'])
+    game_service.build_ship(@opp, Ship::CARRIER, ['e1', 'e2', 'e3', 'e4', 'e5'])
+    @game.save
+
+    game_service.enter_firing_phase
+    game_service.process_surrender(@opp)
+    assert @game.status == Game::FINISHED
   end
 
   test 'build player states' do

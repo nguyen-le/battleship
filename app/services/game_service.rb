@@ -78,6 +78,21 @@ class GameService
     return user
   end
 
+  def process_surrender(user)
+    winning_player = (@game.owner_id == user.id) ?
+      @game.opponent :
+      @game.owner
+    player_state = user.player_states.where(game_id: @game.id).first
+    player_state.health = 0
+    @game.winning_player_id = winning_player.id
+    @game.status = Game::FINISHED
+
+    @game.transaction do
+      player_state.save!
+      @game.save!
+    end
+  end
+
   def enter_setup_phase
     update_status(Game::SETUP)
     randomize_starting_player
