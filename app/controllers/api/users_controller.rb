@@ -12,7 +12,14 @@ class Api::UsersController < ApplicationController
   def create
     @user = User.new(_create_params)
 
-    if @user.save
+    begin
+      @user.save!
+      session[:user_id] = @user.id
+    rescue ActiveRecord::ActiveRecordError => e
+      @errors << e.message
+    end
+
+    if @errors.empty?
       render json: @user, status: :created
     else
       render json: {errors: @user.errors.full_messages}, status: :unprocessable_entity
@@ -23,10 +30,14 @@ class Api::UsersController < ApplicationController
     begin
       @user = User.find(params[:id])
     rescue ActiveRecord::RecordNotFound => e
-      return render json: {errors: e.message}, status: :not_found
+      @errors << e.message
     end
 
-    render json: @user
+    if @errors.empty?
+      render json: @user
+    else
+      render json: {errors: e.message}, status: :not_found
+    end
   end
 
   private

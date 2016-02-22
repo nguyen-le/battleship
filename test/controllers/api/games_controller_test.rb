@@ -65,4 +65,14 @@ class Api::GamesControllerTest < ActionController::TestCase
     assert_response :unprocessable_entity
     assert error_msg
   end
+
+
+  # Start
+  test "start - game starts" do
+    post :start, {id: @game.id}, {user_id: @owner.id}
+  end
+
+  test "start - bad - game doesnt start unless conditions met" do
+
+  end
 end

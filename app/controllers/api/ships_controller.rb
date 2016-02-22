@@ -2,13 +2,12 @@ class Api::ShipsController < ApplicationController
   before_action :_find_game, only: [:create]
 
   def create
-    #GamePolicy
     if @game.status != Game::SETUP
       @errors << 'Cant create Ship at this time'
     elsif @game.owner_id != current_user_id && @game.opponent_id != current_user_id
       @errors << 'You dont have the right to create this Ship'
     else
-      game_service = GameService.new(@game)
+      game_service = GameService.factory(@game)
       begin
         @ship = game_service.build_ship(
           current_user,

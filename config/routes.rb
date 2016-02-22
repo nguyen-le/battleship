@@ -6,6 +6,7 @@ Rails.application.routes.draw do
       resources :ships, only: [:create, :update]
     end
     match '/games/:id/accept', to: 'games#accept', via: [:put]
+    match '/games/:id/start', to: 'games#start', via: [:post]
 
   end
 end

@@ -1,6 +1,6 @@
 class Api::GamesController < ApplicationController
-  before_action :_find_game, only: [:show, :update, :accept]
-  before_action :_check_ownership, only: [:update]
+  before_action :_find_game, only: [:show, :start, :accept]
+  before_action :_check_ownership, only: [:start]
 
   def index
     offset = params[:offset] || 0
@@ -31,17 +31,32 @@ class Api::GamesController < ApplicationController
   end
 
   def accept
-    #GamePolicy
-    if @game.status != Game::PENDING || @game.opponent_id != current_user_id
+    if !(@game.status == Game::PENDING && @game.opponent_id == current_user_id)
       @errors << 'Opponent must accept game'
     else
-      game_service = GameService.new(@game)
+      game_service = GameService.factory(@game)
       begin
-        game_service.do_setup_phase
+        game_service.enter_setup_phase
         @game.save!
       rescue ActiveRecord::ActiveRecordError => e
         @errors << e.message
       end
+    end
+
+    if @errors.empty?
+      render json: @game
+    else
+      render json: {errors: @errors}, status: :unprocessable_entity
+    end
+  end
+
+  def start
+    game_service = GameService.factory(@game)
+    game_service.enter_firing_phase
+    begin
+      @game.save!
+    rescue Exception => e
+      @errors << e.message
     end
 
     if @errors.empty?
@@ -64,6 +79,12 @@ class Api::GamesController < ApplicationController
     _params(:status)
   end
 
+  def _check_ownership
+    unless @game.owner_id == current_user_id
+      return render json: {errors: ['You arent the owner']}, status: :unprocessable_entity
+    end
+  end
+
   def _find_game
     begin
       @game = Game.find(params[:id])
@@ -72,3 +93,8 @@ class Api::GamesController < ApplicationController
     end
   end
 end
+
+# ~> NameError
+# ~> uninitialized constant Api
+# ~>
+# ~> /var/folders/ct/yhbzpv_s01q2nn4sxtsc47780000gn/T/seeing_is_believing_temp_dir20160221-53654-o7gbjj/program.rb:1:in `<main>'
