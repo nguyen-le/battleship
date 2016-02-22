@@ -48,6 +48,7 @@ ActiveRecord::Schema.define(version: 20160221184103) do
 
   create_table "ships", force: :cascade do |t|
     t.string   "ship_type",  null: false
+    t.integer  "health",     null: false
     t.jsonb    "location",   null: false
     t.integer  "game_id",    null: false
     t.integer  "user_id",    null: false
@@ -55,7 +56,7 @@ ActiveRecord::Schema.define(version: 20160221184103) do
     t.datetime "updated_at", null: false
   end
 
-  add_index "ships", ["game_id", "user_id"], name: "index_ships_on_game_id_and_user_id", using: :btree
+  add_index "ships", ["game_id", "user_id", "ship_type"], name: "index_ships_on_game_id_and_user_id_and_ship_type", unique: true, using: :btree
   add_index "ships", ["location"], name: "index_ships_on_location", using: :gin
   add_index "ships", ["user_id"], name: "index_ships_on_user_id", using: :btree
 

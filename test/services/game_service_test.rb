@@ -12,7 +12,23 @@ class GameServiceTest < ActionController::TestCase
     assert game_service.game == @game
   end
 
-  test 'begin setup phase' do
+  test 'build ship' do
+    game_service = GameService.new(@game)
+    ship = game_service.build_ship(@owner, Ship::CRUISER)
+
+  end
+
+  test 'build player states' do
+    game_service = GameService.new(@game)
+    game_service.build_player_state(@owner)
+    game_service.build_player_state(@opp)
+
+    @game.player_states.each do |state|
+      assert state.health == Game::STANDARD_HP
+    end
+  end
+
+  test 'do setup phase' do
     game_service = GameService.new(@game)
     game_service.do_setup_phase
 

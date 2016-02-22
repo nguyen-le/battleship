@@ -17,8 +17,8 @@ class Game < ActiveRecord::Base
   IN_PROGRESS = 'in progress'
   FINISHED = 'finished'
 
-  validate :_has_owner
-  validate :_has_opponent
+  validates_presence_of :owner
+  validates_presence_of :opponent
   validates :game_type, inclusion: {in: [SMALL, STANDARD, LARGE]}
   validates :status, inclusion: {in: [PENDING, SETUP, IN_PROGRESS, FINISHED]}
 
@@ -36,7 +36,8 @@ class Game < ActiveRecord::Base
     inverse_of: :games,
     dependent: :destroy
   )
-  has_many :player_states
+  has_many :player_states, inverse_of: :game
+  has_many :ships, inverse_of: :game
 
   def self.create_grid(size)
     n =
@@ -54,18 +55,5 @@ class Game < ActiveRecord::Base
       grid[letter] = Array.new(n) { 0 }
     end
     return grid
-  end
-
-  private
-  def _has_opponent
-    if opponent.nil? && User.find_by_id(opponent_id).nil?
-      errors.add(:opponent, "can't be blank")
-    end
-  end
-
-  def _has_owner
-    if owner.nil? && User.find_by_id(owner_id).nil?
-      errors.add(:owner, "can't be blank")
-    end
   end
 end
