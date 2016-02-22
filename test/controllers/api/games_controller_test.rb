@@ -13,7 +13,8 @@ class Api::GamesControllerTest < ActionController::TestCase
     fetched_games = JSON.parse(resp.body).fetch('games')
 
     assert_response :ok
-    assert fetched_games.length == 1
+    assert fetched_games.length == 2, 'more than 1'
+    #assert fetched_games.length == 1, 'more than 1'
   end
 
 

@@ -38,7 +38,44 @@ class GameService
 
     raise 'Invalid shot location' unless @game_policy.location_within_bounds?(location)
 
-    @game.shots.build(user: user, receiving_player: receiving_player, location: location)
+    shot = @game.shots.build(user: user, receiving_player: receiving_player, location: location)
+    if shot.valid?
+      shot
+    else
+      raise 'Duplicate shot'
+    end
+  end
+
+  def process_player_dmg(shot)
+    user = shot.receiving_player
+    ship =
+      @game.ships.where(user_id: user.id)
+        .where('location ? :square', square: shot.location)
+        .first
+
+    new_value_for_grid = 1
+    player_state = user.player_states.where(game_id: @game.id).first
+    column = player_state.grid.fetch(shot.location.match(/[a-z]{1}/i).to_s)
+    if ship
+      ship_hp = ship.location.fetch(shot.location)
+      ship.location[shot.location] = ship_hp - 1
+      new_value_for_grid = 2
+      player_state.health -= 1
+
+      if player_state.health == 0
+        enter_game_finished_phase(shot.user)
+      end
+    end
+    column[shot.location.match(/\d+/).to_s.to_i] = new_value_for_grid
+
+    ActiveRecord::Base.transaction do
+      @game.save
+      ship.save
+      shot.save
+      user.save
+      player_state.save
+    end
+    return user
   end
 
   def enter_setup_phase
@@ -52,6 +89,11 @@ class GameService
     @game.status = Game::IN_PROGRESS if @game_policy.can_start_game?
   end
 
+  def enter_game_finished_phase(winning_player)
+    @game.winning_player_id = winning_player.id
+    @game.status = Game::FINISHED
+  end
+
   def randomize_starting_player
     @game.current_attacker_id = [@game.owner_id, @game.opponent_id].sample
   end
@@ -63,7 +105,6 @@ class GameService
   private
   def _parse_location_arr_to_map(location_arr)
     location_map = {}
-    boundaries = @game_policy.game_boundaries
 
     starting_column = nil
     starting_row = nil

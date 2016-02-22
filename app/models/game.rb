@@ -36,9 +36,9 @@ class Game < ActiveRecord::Base
     inverse_of: :games,
     dependent: :destroy
   )
-  has_many :player_states, inverse_of: :game
-  has_many :ships, inverse_of: :game
-  has_many :shots, inverse_of: :game
+  has_many :player_states, inverse_of: :game, autosave: true
+  has_many :ships, inverse_of: :game, autosave: true
+  has_many :shots, inverse_of: :game, autosave: true
 
   def self.create_grid(size)
     n =

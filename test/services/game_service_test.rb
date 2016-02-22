@@ -7,6 +7,36 @@ class GameServiceTest < ActionController::TestCase
     @game = Game.create(owner: @owner, opponent: @opp)
   end
 
+  test 'process player dmg' do
+    game_service = GameService.factory(@game)
+    game_service.enter_setup_phase
+    game_service.build_ship(@owner, Ship::DESTROYER, ['a1', 'a2'])
+    game_service.build_ship(@owner, Ship::CRUISER, ['b1', 'b2', 'b3'])
+    game_service.build_ship(@owner, Ship::SUBMARINE, ['c1', 'c2', 'c3'])
+    game_service.build_ship(@owner, Ship::BATTLESHIP, ['d1', 'd2', 'd3', 'd4'])
+    game_service.build_ship(@owner, Ship::CARRIER, ['e1', 'e2', 'e3', 'e4', 'e5'])
+    game_service.build_ship(@opp, Ship::DESTROYER, ['a1', 'a2'])
+    game_service.build_ship(@opp, Ship::CRUISER, ['b1', 'b2', 'b3'])
+    game_service.build_ship(@opp, Ship::SUBMARINE, ['c1', 'c2', 'c3'])
+    game_service.build_ship(@opp, Ship::BATTLESHIP, ['d1', 'd2', 'd3', 'd4'])
+    game_service.build_ship(@opp, Ship::CARRIER, ['e1', 'e2', 'e3', 'e4', 'e5'])
+    @game.save
+
+    game_service.enter_firing_phase
+    attacker = @game.current_attacker_id == @owner.id ? @owner : @opp
+    shot = game_service.build_shot(attacker, 'a1')
+
+    user = game_service.process_player_dmg(shot)
+
+    player_state = PlayerState.where(game_id: @game.id, user_id: user.id).first
+    ship = Ship.where(game_id: @game.id, user_id: user.id)
+      .where('location ? :sq', sq: shot.location).first
+    assert player_state.health  == 16
+    assert ship.location.fetch('a1') == 0
+    assert ship.location.fetch('a2') == 1
+
+  end
+
   test 'build player states' do
     game_service = GameService.factory(@game)
     game_service.build_player_state(@owner)
